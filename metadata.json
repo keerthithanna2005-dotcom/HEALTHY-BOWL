@@ -1,0 +1,6 @@
+{
+  "name": "Healthy Bowl Food Truck",
+  "description": "Vibrant, premium business website for the Healthy Bowl Food Truck, featuring an interactive menu, a custom bowl builder, a location tracker, and smart catering booking management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
