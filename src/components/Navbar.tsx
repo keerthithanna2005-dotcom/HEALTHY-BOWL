@@ -42,7 +42,7 @@ export default function Navbar({ cart, onOpenCart, onNavigate }: NavbarProps) {
             </div>
             <div>
               <span className="text-xl font-bold text-gray-900 tracking-tight block leading-tight">
-                Healthy <span className="text-emerald-600">Bowl</span>
+                Health <span className="text-emerald-600"> On Wheels </span>
               </span>
               <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-700 block font-bold leading-none">
                 Food Truck Co.

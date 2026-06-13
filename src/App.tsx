@@ -9,6 +9,7 @@ import { CartItem, CateringBooking, ContactMessage } from './types';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import AboutUs from './components/AboutUs';
+
 import Services from './components/Services';
 import Menu from './components/Menu';
 import WhyChooseUs from './components/WhyChooseUs';
@@ -205,7 +206,7 @@ export default function App() {
                 </div>
               </div>
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-widest font-mono">HEALTHY BOWL FOOD CO.</h1>
+                <h1 className="text-xl font-bold tracking-widest font-mono">Health On Wheels</h1>
                 <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-bold">Washing Organic Greens Daily...</p>
               </div>
             </div>
