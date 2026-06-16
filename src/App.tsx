@@ -22,6 +22,10 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 
+// Import Firebase connection utilities & services
+import { db, OperationType, handleFirestoreError } from './firebase';
+import { collection, getDocs, setDoc, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
+
 // Baseline seeded bookings for demonstration
 const INITIAL_BOOKINGS: CateringBooking[] = [
   {
@@ -75,6 +79,38 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('hb_bookings_data', JSON.stringify(bookings));
   }, [bookings]);
+
+  // Firestore Synchronous Loading phase
+  useEffect(() => {
+    async function loadFirebaseData() {
+      try {
+        const bookingsCol = collection(db, 'bookings');
+        const q = query(bookingsCol, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const fbBookings: CateringBooking[] = [];
+        querySnapshot.forEach((docSnap) => {
+          fbBookings.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          } as CateringBooking);
+        });
+
+        if (fbBookings.length > 0) {
+          setBookings(fbBookings);
+        } else {
+          // Empty remote database - seed the REMOTE Firestore database for demonstration consistency
+          for (const seed of INITIAL_BOOKINGS) {
+            await setDoc(doc(db, 'bookings', seed.id), seed);
+          }
+          setBookings(INITIAL_BOOKINGS);
+        }
+      } catch (err) {
+        console.warn('Could not load bookings from Firebase live database. Keeping default seeded list...', err);
+        // Fallback is pre-loaded on state initializers
+      }
+    }
+    loadFirebaseData();
+  }, []);
 
   // Loading Screen simulation to represent premium craft experience
   useEffect(() => {
@@ -156,35 +192,94 @@ export default function App() {
   };
 
   // Bookings custom submission push
-  const handleSubmitBooking = (newBooking: Omit<CateringBooking, 'id' | 'status' | 'createdAt'>) => {
+  const handleSubmitBooking = async (newInput: Omit<CateringBooking, 'id' | 'status' | 'createdAt'>) => {
+    const customId = `booking-custom-${Date.now()}`;
     const bObject: CateringBooking = {
-      ...newBooking,
-      id: `booking-custom-${Date.now()}`,
+      ...newInput,
+      id: customId,
       status: 'Pending',
       createdAt: new Date().toISOString()
     };
+
+    // Update state client-side
     setBookings(prev => [bObject, ...prev]);
+
+    // Save to Firestore with robust safety handling
+    try {
+      await setDoc(doc(db, 'bookings', customId), bObject);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `bookings/${customId}`);
+    }
   };
 
   // Delete booking row inside client lead monitor
-  const handleDeleteBooking = (id: string) => {
+  const handleDeleteBooking = async (id: string) => {
+    // Update state client-side
     setBookings(prev => prev.filter(b => b.id !== id));
+
+    // Delete from Firestore live collection
+    try {
+      await deleteDoc(doc(db, 'bookings', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `bookings/${id}`);
+    }
   };
 
   // Contact support generic line submission
-  const handleSendMessage = (newMsg: Omit<ContactMessage, 'id' | 'createdAt'>) => {
+  const handleSendMessage = async (newMsg: Omit<ContactMessage, 'id' | 'createdAt'>) => {
+    const customId = `msg-${Date.now()}`;
     const msgObj: ContactMessage = {
       ...newMsg,
-      id: `msg-${Date.now()}`,
+      id: customId,
       createdAt: new Date().toISOString()
     };
+
     setMessages(prev => [msgObj, ...prev]);
+
+    // Save to Firestore live messages collection
+    try {
+      await setDoc(doc(db, 'messages', customId), msgObj);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `messages/${customId}`);
+    }
   };
 
   // Order submission
-  const handlePlaceOrder = (orderDetails: { items: CartItem[]; total: number; pickupName: string; pickupTime: string }) => {
+  const handlePlaceOrder = async (orderDetails: { items: CartItem[]; total: number; pickupName: string; pickupTime: string }) => {
     console.log('Simulated Local Order Dispatched: ', orderDetails);
-    // State clearing happens through CartDrawer internal reset
+    
+    const customId = `order-ticket-${Date.now()}`;
+    const orderDocData = {
+      id: customId,
+      pickupName: orderDetails.pickupName,
+      pickupTime: orderDetails.pickupTime,
+      total: orderDetails.total,
+      items: orderDetails.items.map(it => ({
+        id: it.id,
+        name: it.name,
+        price: it.price,
+        quantity: it.quantity,
+        isCustom: it.isCustom,
+        notes: it.notes || '',
+        customDetails: it.customDetails ? {
+          base: it.customDetails.base || '',
+          protein: it.customDetails.protein || '',
+          veggies: it.customDetails.veggies || [],
+          dressing: it.customDetails.dressing || '',
+          toppings: it.customDetails.toppings || [],
+          price: it.customDetails.price || 0,
+          nutrition: it.customDetails.nutrition || { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        } : null
+      })),
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to Firestore live orders collection
+    try {
+      await setDoc(doc(db, 'orders', customId), orderDocData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `orders/${customId}`);
+    }
   };
 
   return (

@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net default catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Context-Aware Primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Bookings collection security block
+    match /bookings/{bookingId} {
+      allow read, list, get: if true;
+      allow create, write: if isValidId(bookingId) 
+        && incoming().name is string && incoming().name.size() <= 200
+        && incoming().email is string && incoming().email.size() <= 200
+        && incoming().phone is string && incoming().phone.size() <= 60
+        && incoming().location is string && incoming().location.size() <= 400;
+      allow delete: if isValidId(bookingId);
+    }
+
+    // Messages collection security block
+    match /messages/{messageId} {
+      allow create, write: if isValidId(messageId)
+        && incoming().name is string && incoming().name.size() <= 200
+        && incoming().email is string && incoming().email.size() <= 200
+        && incoming().subject is string && incoming().subject.size() <= 200
+        && incoming().message is string && incoming().message.size() <= 5000;
+    }
+
+    // Orders (checkout tickets) security block
+    match /orders/{orderId} {
+      allow create, write: if isValidId(orderId)
+        && incoming().pickupName is string && incoming().pickupName.size() <= 200
+        && incoming().pickupTime is string && incoming().pickupTime.size() <= 60
+        && incoming().total is number;
+      allow read, get: if true;
+    }
+  }
+}

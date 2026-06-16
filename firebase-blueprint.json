@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "CateringBooking": {
+      "title": "CateringBooking",
+      "description": "Seeded or custom requested catering sessions for Health On Wheels Co.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "eventDate": { "type": "string" },
+        "guestCount": { "type": "number" },
+        "location": { "type": "string" },
+        "eventType": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "phone", "eventDate", "guestCount", "location", "eventType", "status", "createdAt"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "User queries or high-vibe feedback suggestions submitted online",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "subject", "message", "createdAt"]
+    },
+    "OrderTicket": {
+      "title": "OrderTicket",
+      "description": "Customer order details tickets created on queue in local and online database",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "pickupName": { "type": "string" },
+        "pickupTime": { "type": "string" },
+        "total": { "type": "number" },
+        "items": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "pickupName", "pickupTime", "total", "items", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/bookings/{bookingId}": {
+      "schema": "CateringBooking",
+      "description": "Catering reservation entries submitted by organic food truck clients."
+    },
+    "/messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Contact correspondence suggestions from general visitors."
+    },
+    "/orders/{orderId}": {
+      "schema": "OrderTicket",
+      "description": "Food pickup tickets printed for client retrieval queues."
+    }
+  }
+}
